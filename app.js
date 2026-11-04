@@ -51,7 +51,7 @@ const place=id=>S.places.find(p=>p.id===id)||{name:'(đã xóa)',color:'#6F7C89'
 const active=()=>S.sessions.find(s=>!s.end);
 
 /* ---------- Giao diện chung ---------- */
-let tab='home',H=ym(new Date()),M=ym(new Date()),flt='',noteTmp='',defer=null,reg=null,pcCol=COLORS[0],toastT=0;
+let curDays=[],tab='home',H=ym(new Date()),M=ym(new Date()),flt='',noteTmp='',defer=null,reg=null,pcCol=COLORS[0],toastT=0;
 const TABS=[['home','clock','Chấm giờ'],['hist','list','Lịch sử'],['sum','chart','Tổng kết'],['set','set','Cài đặt']];
 $('#nav').innerHTML=TABS.map(t=>`<button data-t="${t[0]}"${t[0]==='home'?' class="on"':''}>${ic(t[1],24)}${t[2]}</button>`).join('');
 const TITLES={home:'Chấm giờ',hist:'Lịch sử',sum:'Tổng kết tháng',set:'Cài đặt'};
@@ -139,15 +139,15 @@ function rSum(){
  const pl=S.places.map(p=>{const l=S.sessions.filter(s=>s.placeId===p.id&&ov(s,a,b)>0);return{p,ms:sumMs(l,a,b),n:l.length}}).filter(x=>x.ms>0||x.p.goal>0).sort((x,y)=>y.ms-x.ms);
  const pmx=Math.max(...pl.map(x=>x.ms),1);
  const cmp=ptot>0?(()=>{const r=Math.round((tot-ptot)/ptot*100);return `<span class="${r>=0?'up':'dn'}">${r>=0?'Tăng':'Giảm'} ${Math.abs(r)}%</span> so với tháng trước`})():'Chưa có dữ liệu tháng trước để so sánh';
- const bw=310/nd;let svg=`<svg viewBox="0 0 310 122" width="100%" role="img" aria-label="Thời gian theo ngày">`;
- days.forEach((v,i)=>{const hh=v/mx*90;svg+=`<rect x="${i*bw+1}" y="${100-hh}" width="${bw-2}" height="${Math.max(hh,v>0?2:0)}" rx="2" fill="${i===mi?'#B0654B':'#4F6F8F'}"/>`;
-  if([1,5,10,15,20,25,nd].includes(i+1))svg+=`<text x="${i*bw+bw/2}" y="116" font-size="9" text-anchor="middle" fill="currentColor" opacity=".6">${i+1}</text>`});
- svg+='</svg>';
+ const topMs=Math.ceil(Math.max(mx,4*36e5)/36e5)*36e5;curDays=days;
+ const chart=`<small>Tối đa ${topMs/36e5} giờ mỗi ngày</small><div class="bars">${days.map((v,i)=>`<button class="bar" data-a="bar" data-v="${i}" aria-label="Ngày ${i+1}"><i${i===mi?' class="hi"':''} style="height:${v/topMs*100}%"></i></button>`).join('')}</div>
+ <div class="xl">${days.map((v,i)=>`<span>${[1,5,10,15,20,25,nd].includes(i+1)?`<b>${i+1}</b>`:''}</span>`).join('')}</div>
+ <div id="binfo">Chạm vào một cột để xem chi tiết ngày đó</div>`;
  h+=`<div class="card"><small>Tổng thời gian</small><div class="big-num">${fmtDur(tot)}</div><div>${cmp}</div></div>
  <div class="card"><div class="kv"><span>Số ngày có mặt</span><b>${pres}/${nd} ngày</b></div>
  <div class="kv"><span>Ngày ở lâu nhất</span><b>${pad(mi+1)}/${pad(M.m+1)}, ${fmtDur(mx)}</b></div>
  <div class="kv"><span>Trung bình mỗi ngày có mặt</span><b>${fmtDur(tot/pres)}</b></div></div>
- <h3>Theo ngày</h3><div class="card">${svg}</div><h3>Theo địa điểm</h3>`;
+ <h3>Theo ngày</h3><div class="card">${chart}</div><h3>Theo địa điểm</h3>`;
  pl.forEach(x=>{const g=x.p.goal*36e5;
   h+=`<div class="card"><div class="kv"><b>${esc(x.p.name)}</b><b>${fmtDur(x.ms)}</b></div>
   <div class="pb"><em style="width:${x.ms/pmx*100}%;background:${x.p.color}"></em></div>
@@ -217,6 +217,7 @@ function doImport(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{
 /* ---------- Hành động ---------- */
 const ACT={
  close:closeModal,refresh:()=>render(),guide,
+ bar(t){const i=+t.dataset.v;document.querySelectorAll('.bar').forEach(b=>b.classList.toggle('sel',b===t));$('#binfo').textContent=`Ngày ${i+1}/${M.m+1}: ${curDays[i]?fmtDur(curDays[i]):'không có dữ liệu'}`},
  big(){const a=active();
   if(!a){if(!S.sel)return toast('Hãy thêm một địa điểm trước');
    const s={id:uid(),placeId:S.sel,start:Date.now(),end:null,note:noteTmp.trim()};S.sessions.push(s);noteTmp='';save();vib();render();
