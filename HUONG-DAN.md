@@ -7,7 +7,7 @@ Chấm Giờ ghi lại thời gian bạn ở một địa điểm. Bạn chỉ c
 1. Ở tab **Chấm giờ**, chọn địa điểm ở hàng trên cùng.
 2. Khi đến nơi, chạm nút **Bắt đầu**. Ứng dụng lưu giờ hiện tại.
 3. Khi về, chạm nút **Kết thúc**. Ứng dụng báo tổng thời gian bạn đã ở.
-4. Chạm nhầm? Bấm **Hoàn tác** ở thông báo phía dưới trong vòng 10 giây.
+4. Chạm nhầm? Bấm nút tròn **Hoàn tác** (mũi tên quay lại) ở góc phải phía dưới màn hình. Nút này nằm đó cho tới khi bạn hoàn tác hoặc thao tác khác.
 5. Có thể gõ **Ghi chú** trước hoặc trong lúc ghi giờ.
 
 Khi đang ghi giờ, màn hình hiện giờ bắt đầu và thời gian đã qua. Con số "đã qua" chỉ tính lại khi bạn mở app hoặc chạm **Cập nhật**, đó là cách app tiết kiệm pin. Bạn có thể tắt app hoặc khóa máy, giờ bắt đầu vẫn được giữ.

@@ -1,6 +1,6 @@
 'use strict';
 const VER='2.0',KEY='chamgio.v1',DAY=864e5;
-const COLORS=['#4F6F8F','#B0654B','#5E8C73','#8575A3','#A88B4E','#A5667A','#6F7C89'];
+const COLORS=['#0A3F7A','#0F5BB0','#1976D2','#2E8FE8','#4BA3F2','#74BAF5','#9DCDF8'];
 const $=(s,e=document)=>e.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -20,7 +20,8 @@ const P={
  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.01"/>',
  phone:'<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
  refresh:'<path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/>',
- trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'
+ trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+ undo:'<path d="M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-3"/>'
 };
 const ic=(n,s=22)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
 
@@ -30,7 +31,8 @@ let S=load();
 function load(){let d=null;try{d=JSON.parse(localStorage.getItem(KEY))}catch(e){}
  if(!d||!Array.isArray(d.places)||!Array.isArray(d.sessions))d=DEF();
  d.set=Object.assign({theme:'auto',alert:12,lastExport:0,seenSum:''},d.set||{});
- if(!d.set.lastExport)d.set.lastExport=Date.now();return d}
+ if(!d.set.lastExport)d.set.lastExport=Date.now();
+ d.places.forEach((p,i)=>{if(!COLORS.includes(p.color))p.color=COLORS[i%COLORS.length]});return d}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Không lưu được dữ liệu, bộ nhớ có thể đã đầy')}}
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 
@@ -47,7 +49,7 @@ const fmtD=t=>{const d=new Date(t);return `${pad(d.getDate())}/${pad(d.getMonth(
 const toIn=t=>{const d=new Date(t);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`};
 const dayStart=t=>{const d=new Date(t);return new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()};
 const WD=['Chủ nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'];
-const place=id=>S.places.find(p=>p.id===id)||{name:'(đã xóa)',color:'#6F7C89',goal:0};
+const place=id=>S.places.find(p=>p.id===id)||{name:'(đã xóa)',color:'#7C93AB',goal:0};
 const active=()=>S.sessions.find(s=>!s.end);
 
 /* ---------- Giao diện chung ---------- */
@@ -58,7 +60,9 @@ const TITLES={home:'Chấm giờ',hist:'Lịch sử',sum:'Tổng kết tháng',s
 function go(t){tab=t;document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('on',e.id==='t-'+t));
  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
  $('#ttl').textContent=TITLES[t];$('main').scrollTop=0;render()}
-function render(){const n=new Date();$('#dt').textContent=`${WD[n.getDay()]}, ${pad(n.getDate())}/${pad(n.getMonth()+1)}`;({home:rHome,hist:rHist,sum:rSum,set:rSet})[tab]()}
+function render(){const n=new Date();$('#dt').textContent=`${WD[n.getDay()]}, ${pad(n.getDate())}/${pad(n.getMonth()+1)}`;({home:rHome,hist:rHist,sum:rSum,set:rSet})[tab]();fab()}
+function undoInfo(){const l=S.last,s=l&&S.sessions.find(x=>x.id===l.id);return s&&((l.t==='start'&&!s.end)||(l.t==='end'&&s.end===l.end))?l:null}
+function fab(){const l=undoInfo(),b=$('#fab');b.hidden=!l;if(l){const t=`Hoàn tác ${l.t==='start'?'Bắt đầu':'Kết thúc'} lúc ${fmtT(l.at)}`;b.setAttribute('aria-label',t);b.title=t;b.innerHTML=ic('undo',26)}}
 function applyTheme(){const t=S.set.theme;if(t==='auto')document.documentElement.removeAttribute('data-theme');else document.documentElement.dataset.theme=t}
 function toast(msg,undo){const el=$('#toast');clearTimeout(toastT);
  el.innerHTML=`<span>${esc(msg)}</span>${undo?'<button id="undo">Hoàn tác</button>':''}`;el.hidden=false;
@@ -88,7 +92,7 @@ function rHome(){
  <div class="st">${a?'Từ '+fmtT(a.start):'Chưa ghi giờ'}</div>
  <div class="sub">${a?`${esc(place(a.placeId).name)}, đã qua ${fmtDur(n-a.start)} <button data-a="refresh">Cập nhật</button>`:'Chạm nút khi bạn đến nơi'}</div></div>
  <input id="note" class="inp" placeholder="Ghi chú (không bắt buộc)" maxlength="120" value="${esc(a?a.note||'':noteTmp)}">
- <div class="stats"><div class="card"><b>${fmtDur(sumMs(S.sessions,d0,d0+DAY))}</b><span>Hôm nay</span></div><div class="card"><b>${fmtDur(sumMs(S.sessions,ma,mb))}</b><span>Tháng này</span></div></div>`}
+ <div class="hcard"><small>Hôm nay</small><div class="hnum">${fmtDur(sumMs(S.sessions,d0,d0+DAY))}</div><div class="tiles"><div class="tile"><small>Tháng này</small><b>${fmtDur(sumMs(S.sessions,ma,mb))}</b></div><div class="tile"><small>Số lần hôm nay</small><b>${S.sessions.filter(s=>ov(s,d0,d0+DAY)>0).length} lần</b></div></div></div>`}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)render()});
 document.addEventListener('input',e=>{if(e.target.id!=='note')return;const a=active();if(a){a.note=e.target.value;save()}else noteTmp=e.target.value});
 
@@ -143,7 +147,7 @@ function rSum(){
  const chart=`<small>Tối đa ${topMs/36e5} giờ mỗi ngày</small><div class="bars">${days.map((v,i)=>`<button class="bar" data-a="bar" data-v="${i}" aria-label="Ngày ${i+1}"><i${i===mi?' class="hi"':''} style="height:${v/topMs*100}%"></i></button>`).join('')}</div>
  <div class="xl">${days.map((v,i)=>`<span>${[1,5,10,15,20,25,nd].includes(i+1)?`<b>${i+1}</b>`:''}</span>`).join('')}</div>
  <div id="binfo">Chạm vào một cột để xem chi tiết ngày đó</div>`;
- h+=`<div class="card"><small>Tổng thời gian</small><div class="big-num">${fmtDur(tot)}</div><div>${cmp}</div></div>
+ h+=`<div class="hcard"><small>Tổng thời gian</small><div class="hnum">${fmtDur(tot)}</div><div>${cmp}</div></div>
  <div class="card"><div class="kv"><span>Số ngày có mặt</span><b>${pres}/${nd} ngày</b></div>
  <div class="kv"><span>Ngày ở lâu nhất</span><b>${pad(mi+1)}/${pad(M.m+1)}, ${fmtDur(mx)}</b></div>
  <div class="kv"><span>Trung bình mỗi ngày có mặt</span><b>${fmtDur(tot/pres)}</b></div></div>
@@ -220,10 +224,13 @@ const ACT={
  bar(t){const i=+t.dataset.v;document.querySelectorAll('.bar').forEach(b=>b.classList.toggle('sel',b===t));$('#binfo').textContent=`Ngày ${i+1}/${M.m+1}: ${curDays[i]?fmtDur(curDays[i]):'không có dữ liệu'}`},
  big(){const a=active();
   if(!a){if(!S.sel)return toast('Hãy thêm một địa điểm trước');
-   const s={id:uid(),placeId:S.sel,start:Date.now(),end:null,note:noteTmp.trim()};S.sessions.push(s);noteTmp='';save();vib();render();
-   toast('Đã bắt đầu tại '+place(s.placeId).name,()=>{S.sessions=S.sessions.filter(x=>x!==s);save();render()})}
-  else{a.end=Date.now();a.note=(($('#note')||{}).value||a.note||'').trim();save();vib();render();
-   toast('Đã kết thúc, tổng '+fmtDur(a.end-a.start),()=>{a.end=null;save();render()})}},
+   const s={id:uid(),placeId:S.sel,start:Date.now(),end:null,note:noteTmp.trim()};S.sessions.push(s);noteTmp='';S.last={t:'start',id:s.id,at:Date.now()};save();vib();render();
+   toast('Đã bắt đầu tại '+place(s.placeId).name)}
+  else{a.end=Date.now();a.note=(($('#note')||{}).value||a.note||'').trim();S.last={t:'end',id:a.id,end:a.end,at:a.end};save();vib();render();
+   toast('Đã kết thúc, tổng '+fmtDur(a.end-a.start))}},
+ undo(){const l=S.last;if(!l)return;const s=S.sessions.find(x=>x.id===l.id);
+  if(s){if(l.t==='start'&&!s.end)S.sessions=S.sessions.filter(x=>x!==s);else if(l.t==='end'&&s.end===l.end)s.end=null}
+  S.last=null;save();vib();render();toast('Đã hoàn tác')},
  outNow(){const a=active();if(a){a.end=Date.now();save();render();toast('Đã kết thúc, tổng '+fmtDur(a.end-a.start))}},
  outAt(){const a=active();if(!a)return;
   openModal(`<h2>Bạn đã kết thúc lúc nào?</h2><label>Giờ kết thúc<input id="oT" type="datetime-local" value="${toIn(Date.now())}"></label><div class="row"><button class="btn pri" id="oS">Lưu</button><button class="btn" data-a="close">Hủy</button></div>`);
