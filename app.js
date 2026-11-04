@@ -159,7 +159,7 @@ function rSum(){
 const lrow=(a,i,t,sub,cls='',v='')=>`<button class="lrow ${cls}" data-a="${a}"${v?` data-v="${v}"`:''}><span class="li">${ic(i)}</span><span class="lt"><b>${t}</b>${sub?`<small>${sub}</small>`:''}</span></button>`;
 function rSet(){
  const st=window.matchMedia('(display-mode: standalone)').matches;
- $('#t-set').innerHTML=`<h3>Địa điểm</h3>${S.places.map(p=>`<button class="lrow" data-a="editPl" data-v="${p.id}" style="--c:${p.color}"><span class="chip" style="min-height:0;padding:0;border:0;background:none"><i></i></span><span class="lt"><b>${esc(p.name)}</b><small>${p.goal?'Mục tiêu '+p.goal+' giờ mỗi tháng':'Chưa đặt mục tiêu'}</small></span><span class="li">${ic('edit',20)}</span></button>`).join('')}
+ $('#t-set').innerHTML=`${lrow('guide','book','Hướng dẫn sử dụng','Cách dùng, sao lưu và cài vào màn hình chính')}<h3>Địa điểm</h3>${S.places.map(p=>`<button class="lrow" data-a="editPl" data-v="${p.id}" style="--c:${p.color}"><span class="chip" style="min-height:0;padding:0;border:0;background:none"><i></i></span><span class="lt"><b>${esc(p.name)}</b><small>${p.goal?'Mục tiêu '+p.goal+' giờ mỗi tháng':'Chưa đặt mục tiêu'}</small></span><span class="li">${ic('edit',20)}</span></button>`).join('')}
  ${lrow('addPl','plus','Thêm địa điểm','')}
  <h3>Tùy chọn</h3><div class="card">
  <label class="kv"><span>Giao diện</span><select id="sTheme" class="sel" style="width:auto;margin:0"><option value="auto"${S.set.theme==='auto'?' selected':''}>Theo máy</option><option value="light"${S.set.theme==='light'?' selected':''}>Sáng</option><option value="dark"${S.set.theme==='dark'?' selected':''}>Tối</option></select></label>
@@ -169,7 +169,6 @@ function rSet(){
  ${lrow('expC','down','Xuất file CSV','Mở bằng Excel hoặc Google Sheets')}
  ${lrow('impJ','up','Nhập từ file JSON','Khôi phục dữ liệu đã sao lưu')}
  <h3>Ứng dụng</h3>
- ${lrow('guide','book','Hướng dẫn sử dụng','Cách dùng, cài đặt và cập nhật')}
  <button class="lrow" data-a="install"${st?' disabled':''}><span class="li">${ic('phone')}</span><span class="lt"><b>${st?'Đã cài vào màn hình chính':'Cài vào màn hình chính'}</b></span></button>
  ${lrow('upd','refresh','Kiểm tra cập nhật','Phiên bản '+VER)}
  ${lrow('wipe','trash','Xóa toàn bộ dữ liệu','Không thể hoàn tác','bad')}
